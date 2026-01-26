@@ -1,0 +1,3 @@
+(executable
+ (name coin)
+ (libraries core))

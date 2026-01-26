@@ -1,0 +1,3 @@
+(executable
+(name option_pricer)
+(libraries core base))
