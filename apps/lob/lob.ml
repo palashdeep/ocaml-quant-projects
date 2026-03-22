@@ -19,7 +19,7 @@ type order = {
 
 type trade = {
   buy_id : int;
-  ask_id : int;
+  sell_id : int;
   qty : int;
   price : int;
 }
@@ -38,16 +38,16 @@ let empty_book = {
   index = Hashtbl.create 1024;
 }
 
-let best_bid bids =
+let best_bid_level bids =
   PriceMap.max_binding_opt bids
 
-let best_ask asks =
+let best_ask_level asks =
   PriceMap.min_binding_opt asks
 
 let rec match_order book order trades =
   match order.side with
   | Buy ->
-      begin match best_ask book.asks with
+      begin match best_ask_level book.asks with
       | Some (price, q) when order.kind = Market || price <= order.price ->
         
         let resting = Queue.peek q in
@@ -55,7 +55,7 @@ let rec match_order book order trades =
           
         let trade = {
           buy_id = order.id;
-          ask_id = resting.id;
+          sell_id = resting.id;
           qty = trade_qty;
           price = price;
         }
@@ -94,8 +94,9 @@ let rec match_order book order trades =
           let q =
             match PriceMap.find_opt order.price book.bids with
             | Some q -> q
-            | None -> let q = Queue.create () in
-                q
+            | None -> 
+              let q = Queue.create () in
+              q
           in
           (* unfilled limit order rests on book *)
           Queue.push order q;
@@ -106,7 +107,7 @@ let rec match_order book order trades =
       end
 
   | Sell -> 
-    begin match best_bid book.bids with
+    begin match best_bid_level book.bids with
     | Some (price, q) when order.kind = Market || price >= order.price ->
       
       let resting = Queue.peek q in
@@ -115,7 +116,7 @@ let rec match_order book order trades =
 
       let trade = {
         buy_id = resting.id;
-        ask_id = order.id;
+        sell_id = order.id;
         qty = trade_qty;
         price = price;
       }
@@ -153,8 +154,9 @@ let rec match_order book order trades =
         let q =
           match PriceMap.find_opt order.price book.asks with
           | Some q -> q
-          | None -> let q = Queue.create () in
-              q
+          | None -> 
+            let q = Queue.create () in
+            q
         in
 
         Queue.push order q;
@@ -286,7 +288,7 @@ let () =
   (fun t ->
       Printf.printf
         "Trade: buy=%d sell=%d price=%d qty=%d\n"
-        t.buy_id t.ask_id t.price t.qty)
+        t.buy_id t.sell_id t.price t.qty)
   (List.rev trades);
 
   Printf.printf "\n=== Book State ===\n";

@@ -1,0 +1,5 @@
+(executable
+ (name main)
+ (modules main oms strategy exchange_adapter)
+ (libraries lob)
+)

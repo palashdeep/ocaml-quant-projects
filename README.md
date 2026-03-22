@@ -17,6 +17,7 @@ apps/
   coin_ev/          # Monte Carlo coin-flip simulation
   option_pricer/    # Monte Carlo option pricing
   lob/              # Limit Order Book matching engine
+  oms/              # Order management + trading loop
 ```
 
 Each project builds independently using `dune`.
@@ -102,6 +103,39 @@ The design prioritizes correctness, explicit invariants, and predictable behavio
 ### Run
 ```bash
 dune exec ./apps/lob/lob.exe
+```
+
+## 4. Order Management and Trading Loop
+
+**Location:** `apps/oms`
+
+### Overview
+A minimal order management system (OMS) integrated with a simple trading loop. This component connects strategy decisions to the matching engine, modeling order lifecycle and execution handling.
+
+### Features
+- Order lifecycle tracking (active, partial fill, filled, cancelled)
+- Execution handling via trade updates from the matching engine
+- Price/side-based tracking of active orders
+- Integration with the limit order book via a lightweight adapter layer
+
+### Trading Loop
+A simple deterministic trading loop simulates:
+
+```graphql
+price stream -> strategy -> OMS -> matching engine -> trades -> OMS state update
+```
+
+### Strategy
+A basic mean-reversion strategy generates buy/sell signals based on deviation from a reference price.
+
+### Design Notes
+- OMS and exchange logic are decoupled via an adapter layer
+- Order state transistions are explicit and validates
+- The system is deterministic and fully reproducible
+
+### Run
+```bash
+dune exec ./apps/oms/main.exe
 ```
 
 ## Build Instructions
